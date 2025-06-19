@@ -1,0 +1,5 @@
+[
+  { "name": "Wing A - Space 1", "status": "free", "coordinates": [5.1027, 8.1236] },
+  { "name": "Wing A - Space 2", "status": "occupied", "coordinates": [5.1028, 8.1237] },
+  { "name": "Wing B - Space 1", "status": "free", "coordinates": [5.1026, 8.1234] }
+]

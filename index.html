@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Parking - Landmark University</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; }
+    #map { width: 100%; height: 100%; }
+    .sidebar {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 10;
+      animation: slideIn 1s ease-out;
+      color: #fff;
+    }
+    .sidebar h2 { margin-top: 0; color: #00b894; }
+    .sidebar button {
+      display: block;
+      margin-bottom: 10px;
+      width: 220px;
+      padding: 10px;
+      border: none;
+      background: #00b894;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .sidebar button:hover { background: #019875; }
+    .sidebar input {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 200px;
+      border: none;
+      border-radius: 5px;
+    }
+    #overlayImage, #videoContainer {
+      display: none;
+      position: absolute;
+      top: 10%;
+      left: 25%;
+      width: 50%;
+      height: 50%;
+      z-index: 15;
+      border: 3px solid #00b894;
+      border-radius: 10px;
+    }
+    #overlayImage img, #videoContainer iframe {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translate(-100%, -50%); }
+      to { opacity: 1; transform: translate(0, -50%); }
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="sidebar">
+    <h2>Smart Parking</h2>
+    <button onclick="zoomToSecondCollege()">Zoom to Second College</button>
+    <button onclick="showImage('196.223.112.94')">FCB Car Park</button>
+    <button onclick="showImage('196.13.111.249')">Senate Car Park</button>
+    <button onclick="showImage('196.223.112.101')">FCB Car Park Right</button>
+    <button onclick="showImage('196.13.111.211')">Second College Wing A</button>
+    <button onclick="showImage('196.13.111.132')">Second College Wing B</button>
+    <hr>
+    <div id="adminLogin">
+      <input type="password" id="adminPass" placeholder="Admin Password">
+      <button onclick="adminLogin()">Login as Admin</button>
+    </div>
+    <button id="adminVideoBtn" style="display:none;" onclick="showVideo()">Show Admin Video</button>
+  </div>
+
+  <div id="overlayImage"><img id="cctvImage" src="" alt="CCTV Snapshot"></div>
+  <div id="videoContainer"><iframe id="cctvVideo" src=""></iframe></div>
+
+  <script>
+    mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [5.1027, 8.1235],
+      zoom: 17
+    });
+
+    map.on('load', () => {
+      map.addSource('spaces', {
+        type: 'geojson',
+        data: '/api/geojson-markers'
+      });
+      map.addLayer({
+        id: 'parkingMarkers',
+        type: 'circle',
+        source: 'spaces',
+        paint: {
+          'circle-radius': 8,
+          'circle-color': [
+            'match', ['get', 'status'],
+            'free', '#00cc66',
+            'occupied', '#cc0000',
+            '#999999'
+          ]
+        }
+      });
+      setInterval(() => {
+        map.getSource('spaces').setData('/api/geojson-markers');
+      }, 5000);
+    });
+
+    function zoomToSecondCollege() {
+      map.flyTo({ center: [5.1030, 8.1255], zoom: 18 });
+    }
+
+    function showImage(ip) {
+      document.getElementById('videoContainer').style.display = 'none';
+      document.getElementById('cctvImage').src = `/api/camera-proxy?ip=${ip}&type=snapshot`;
+      document.getElementById('overlayImage').style.display = 'block';
+    }
+
+    function showVideo() {
+      const ip = '196.13.111.211';
+      document.getElementById('overlayImage').style.display = 'none';
+      document.getElementById('cctvVideo').src = `/api/camera-proxy?ip=${ip}&type=video`;
+      document.getElementById('videoContainer').style.display = 'block';
+    }
+
+    function adminLogin() {
+      const pass = document.getElementById('adminPass').value;
+      if (pass === 'camera123') {
+        document.getElementById('adminVideoBtn').style.display = 'block';
+        alert("Admin access granted.");
+      } else {
+        alert("Incorrect password.");
+      }
+    }
+  </script>
+</body>
+</html>
